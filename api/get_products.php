@@ -10,12 +10,27 @@ require_once 'config.php';
 $conn = getDBConnection();
 
 $sql = "SELECT 
-            p.*,
+            p.id,
+            p.farmerId,
+            p.productName,
+            p.description,
+            p.price,
+            p.unitOfSale,
+            p.stockQuantity,
+            p.categoryId,
+            p.imagePath,
+            p.isAvailable,
+            p.allowBids,
+            p.minBidPrice,
+            p.created_at,
+            p.updated_at,
+            p.low_stock_threshold,
+            p.last_out_of_stock_notified,
             c.categoryName
         FROM products p
         LEFT JOIN categories c ON p.categoryId = c.id
-        ORDER BY p.id DESC
-        LIMIT 5";
+        WHERE p.isAvailable = 1
+        ORDER BY p.id DESC";
 
 $result = $conn->query($sql);
 
@@ -29,6 +44,7 @@ if (!$result) {
 }
 
 $products = [];
+
 while ($row = $result->fetch_assoc()) {
     $products[] = $row;
 }
