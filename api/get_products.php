@@ -7,9 +7,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 require_once 'config.php';
 
-$conn = getDBConnection();
-
 echo json_encode([
     "success" => true,
-    "message" => "database connected successfully"
+    "message" => "config loaded successfully"
 ]);
