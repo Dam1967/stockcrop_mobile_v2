@@ -1,21 +1,15 @@
 <?php
-// =============================================
-// StockCrop API - Get Product Details
-// GET: ?id=1
-// =============================================
+header("Content-Type: application/json; charset=UTF-8");
+
 require_once 'config.php';
-
-$productId = isset($_GET['id']) ? intval($_GET['id']) : 0;
-
-if ($productId <= 0) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid product ID']);
-    exit();
-}
 
 $conn = getDBConnection();
 
-$stmt = $conn->prepare("
+$categoryId = isset($_GET['category']) ? intval($_GET['category']) : 0;
+$search     = isset($_GET['search']) ? trim($_GET['search']) : '';
+$farmerId   = isset($_GET['farmer']) ? intval($_GET['farmer']) : 0;
+
+$sql = "
     SELECT 
         p.id,
         p.productName,
@@ -26,54 +20,94 @@ $stmt = $conn->prepare("
         p.isAvailable,
         p.imagePath,
         p.farmerId,
-        p.created_at,
         c.id AS categoryId,
         c.categoryName,
-        f.first_name AS farmerFirstName,
-        f.last_name  AS farmerLastName,
-        f.farm_name  AS farmName,
-        f.parish     AS farmerParish,
-        f.phone      AS farmerPhone
+        f.firstName AS farmerFirstName,
+        f.lastName AS farmerLastName,
+        f.parish AS farmerParish
     FROM products p
-    JOIN categories c ON p.categoryId = c.id
-    JOIN farmers f    ON p.farmerId   = f.id
-    WHERE p.id = ?
-");
-$stmt->bind_param("i", $productId);
-$stmt->execute();
-$result = $stmt->get_result();
+    LEFT JOIN categories c ON p.categoryId = c.id
+    LEFT JOIN farmers f ON p.farmerId = f.id
+    WHERE p.isAvailable = 1
+      AND p.stockQuantity > 0
+";
 
-if ($result->num_rows === 0) {
-    $stmt->close();
-    $conn->close();
-    http_response_code(404);
-    echo json_encode(['success' => false, 'message' => 'Product not found']);
-    exit();
+$params = [];
+$paramTypes = '';
+
+if ($categoryId > 0) {
+    $sql .= " AND p.categoryId = ?";
+    $paramTypes .= 'i';
+    $params[] = $categoryId;
 }
 
-$row = $result->fetch_assoc();
+if ($search !== '') {
+    $sql .= " AND (p.productName LIKE ? OR p.description LIKE ?)";
+    $paramTypes .= 'ss';
+    $searchTerm = '%' . $search . '%';
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+}
+
+if ($farmerId > 0) {
+    $sql .= " AND p.farmerId = ?";
+    $paramTypes .= 'i';
+    $params[] = $farmerId;
+}
+
+$sql .= " ORDER BY p.productName ASC";
+
+$stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    echo json_encode([
+        "success" => false,
+        "stage" => "prepare",
+        "message" => $conn->error
+    ]);
+    exit;
+}
+
+if (!empty($params)) {
+    $stmt->bind_param($paramTypes, ...$params);
+}
+
+if (!$stmt->execute()) {
+    echo json_encode([
+        "success" => false,
+        "stage" => "execute",
+        "message" => $stmt->error
+    ]);
+    exit;
+}
+
+$result = $stmt->get_result();
+$products = [];
+
+while ($row = $result->fetch_assoc()) {
+    $products[] = [
+        "id" => (int)$row["id"],
+        "productName" => $row["productName"],
+        "description" => $row["description"],
+        "price" => (float)$row["price"],
+        "unitOfSale" => $row["unitOfSale"],
+        "stockQuantity" => (int)$row["stockQuantity"],
+        "isAvailable" => (bool)$row["isAvailable"],
+        "imagePath" => $row["imagePath"],
+        "farmerId" => (int)$row["farmerId"],
+        "categoryId" => isset($row["categoryId"]) ? (int)$row["categoryId"] : null,
+        "categoryName" => $row["categoryName"] ?? "",
+        "farmerName" => trim(($row["farmerFirstName"] ?? "") . " " . ($row["farmerLastName"] ?? "")),
+        "farmerParish" => $row["farmerParish"] ?? ""
+    ];
+}
+
 $stmt->close();
 $conn->close();
 
 echo json_encode([
-    'success' => true,
-    'product' => [
-        'id'            => intval($row['id']),
-        'productName'   => $row['productName'],
-        'description'   => $row['description'],
-        'price'         => floatval($row['price']),
-        'unitOfSale'    => $row['unitOfSale'],
-        'stockQuantity' => intval($row['stockQuantity']),
-        'isAvailable'   => (bool)$row['isAvailable'],
-        'imagePath'     => $row['imagePath'],
-        'farmerId'      => intval($row['farmerId']),
-        'categoryId'    => intval($row['categoryId']),
-        'categoryName'  => $row['categoryName'],
-        'farmerName'    => $row['farmerFirstName'] . ' ' . $row['farmerLastName'],
-        'farmName'      => $row['farmName'],
-        'farmerParish'  => $row['farmerParish'],
-        'farmerPhone'   => $row['farmerPhone'],
-        'createdAt'     => $row['created_at'],
-    ]
+    "success" => true,
+    "products" => $products,
+    "total" => count($products)
 ]);
 ?>
