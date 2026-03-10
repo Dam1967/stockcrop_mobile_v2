@@ -4,7 +4,7 @@ $host = "crossover.proxy.rlwy.net";
 $port = 23490;
 $dbname = "stockcrop_mobile_v2";
 $username = "root";
-$password = "YOUR_RAILWAY_PASSWORD";
+$password = "TXIoowGcIIbRpYSWaKRhfhgSVTjSGGeT";
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 
