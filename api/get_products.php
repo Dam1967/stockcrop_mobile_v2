@@ -1,14 +1,7 @@
 <?php
-// =============================================
-// StockCrop API - Get Products (Marketplace)
-// GET: ?category=1&search=tomato&farmer=1
-// =============================================
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
-header('Content-Type: application/json; charset=UTF-8');
 
 require_once 'config.php';
 
@@ -33,20 +26,21 @@ $sql = "SELECT
         LEFT JOIN farmers f ON p.farmerId = f.id
         ORDER BY p.id DESC";
 
-$result = mysqli_query($conn, $sql);
+$result = $conn->query($sql);
 
 if (!$result) {
+    http_response_code(500);
     echo json_encode([
         "success" => false,
-        "error" => mysqli_error($conn),
-        "sql" => $sql
+        "message" => "Query failed",
+        "error" => $conn->error
     ]);
     exit;
 }
 
 $products = [];
 
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = $result->fetch_assoc()) {
     $products[] = $row;
 }
 
