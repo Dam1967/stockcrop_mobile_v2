@@ -29,3 +29,6 @@ echo json_encode([
     "success" => true,
     "categories" => $categories
 ]);
+
+$conn->close();
+?>
