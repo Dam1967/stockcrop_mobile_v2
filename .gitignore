@@ -1,0 +1,20 @@
+# Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+android/.gradle/
+android/app/build/
+
+# Logs
+*.log
+
+# Uploads
+uploads/
+
+# Environment files
+.env
