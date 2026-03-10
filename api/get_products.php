@@ -9,7 +9,14 @@ require_once 'config.php';
 
 $conn = getDBConnection();
 
-$sql = "SELECT * FROM products LIMIT 5";
+$sql = "SELECT 
+            p.*,
+            c.categoryName
+        FROM products p
+        LEFT JOIN categories c ON p.categoryId = c.id
+        ORDER BY p.id DESC
+        LIMIT 5";
+
 $result = $conn->query($sql);
 
 if (!$result) {
@@ -22,7 +29,6 @@ if (!$result) {
 }
 
 $products = [];
-
 while ($row = $result->fetch_assoc()) {
     $products[] = $row;
 }
