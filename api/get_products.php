@@ -26,26 +26,27 @@ $sql = "SELECT
             p.farmerId,
             p.categoryId,
             c.categoryName,
-            CONCAT(f.firstName, ' ', f.lastName) AS farmerName,
+            CONCAT(COALESCE(f.firstName, ''), ' ', COALESCE(f.lastName, '')) AS farmerName,
             f.parish AS farmerParish
         FROM products p
         LEFT JOIN categories c ON p.categoryId = c.id
         LEFT JOIN farmers f ON p.farmerId = f.id
         ORDER BY p.id DESC";
 
-$result = $conn->query($sql);
+$result = mysqli_query($conn, $sql);
 
 if (!$result) {
     echo json_encode([
         "success" => false,
-        "error" => $conn->error
+        "error" => mysqli_error($conn),
+        "sql" => $sql
     ]);
     exit;
 }
 
 $products = [];
 
-while ($row = $result->fetch_assoc()) {
+while ($row = mysqli_fetch_assoc($result)) {
     $products[] = $row;
 }
 
