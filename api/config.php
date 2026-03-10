@@ -11,19 +11,19 @@ header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
 
-// Handle preflight OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
 function getDBConnection() {
-    $host     = "localhost";
-    $dbName   = "stockcrop_mobile_v2";
-    $username = "root";
-    $password = "";
+    $host     = getenv('DB_HOST') ?: '127.0.0.1';
+    $port     = (int)(getenv('DB_PORT') ?: 3306);
+    $dbName   = getenv('DB_NAME') ?: '';
+    $username = getenv('DB_USER') ?: '';
+    $password = getenv('DB_PASS') ?: '';
 
-    $conn = new mysqli($host, $username, $password, $dbName);
+    $conn = new mysqli($host, $username, $password, $dbName, $port);
 
     if ($conn->connect_error) {
         http_response_code(500);
