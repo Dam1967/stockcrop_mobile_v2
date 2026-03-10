@@ -8,10 +8,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 require_once 'config.php';
 
 $conn = getDBConnection();
@@ -33,9 +29,9 @@ $sql = "
         p.farmerId,
         c.id AS categoryId,
         c.categoryName,
-        f.first_name AS farmerFirstName,
-        f.last_name  AS farmerLastName,
-        f.parish     AS farmerParish
+        f.firstName AS farmerFirstName,
+        f.lastName  AS farmerLastName,
+        f.parish    AS farmerParish
     FROM products p
     JOIN categories c ON p.categoryId = c.id
     JOIN farmers f    ON p.farmerId   = f.id
@@ -70,6 +66,10 @@ $sql .= " ORDER BY p.productName ASC";
 
 $stmt = $conn->prepare($sql);
 
+if (!$stmt) {
+    die("SQL prepare failed: " . $conn->error);
+}
+
 if (!empty($params)) {
     $stmt->bind_param($paramTypes, ...$params);
 }
@@ -97,8 +97,12 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Get categories for filter
-$catResult  = $conn->query("SELECT id, categoryName FROM categories ORDER BY categoryName ASC");
+$catResult = $conn->query("SELECT id, categoryName FROM categories ORDER BY categoryName ASC");
+
+if (!$catResult) {
+    die("Categories query failed: " . $conn->error);
+}
+
 $categories = [];
 while ($cat = $catResult->fetch_assoc()) {
     $categories[] = $cat;
@@ -106,6 +110,7 @@ while ($cat = $catResult->fetch_assoc()) {
 
 $conn->close();
 
+header("Content-Type: application/json; charset=UTF-8");
 echo json_encode([
     'success'    => true,
     'products'   => $products,
