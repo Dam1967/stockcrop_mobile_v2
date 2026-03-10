@@ -1,39 +1,31 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+header('Content-Type: application/json; charset=UTF-8');
 
 require_once 'config.php';
 
-try {
-    $conn = getDBConnection();
+$conn = getDBConnection();
 
-    $sql = "SELECT id, categoryName FROM categories ORDER BY categoryName ASC";
-    $result = $conn->query($sql);
+$sql = "SELECT id, categoryName FROM categories ORDER BY categoryName ASC";
+$result = $conn->query($sql);
 
-    if (!$result) {
-        throw new Exception("Query failed: " . $conn->error);
-    }
-
-    $categories = [];
-    while ($row = $result->fetch_assoc()) {
-        $categories[] = [
-            "id" => (int)$row["id"],
-            "categoryName" => $row["categoryName"]
-        ];
-    }
-
-    echo json_encode([
-        "success" => true,
-        "categories" => $categories
-    ]);
-} catch (Throwable $e) {
-    http_response_code(500);
+if (!$result) {
     echo json_encode([
         "success" => false,
-        "message" => $e->getMessage()
+        "message" => $conn->error
     ]);
+    exit;
 }
-?>
+
+$categories = [];
+
+while ($row = $result->fetch_assoc()) {
+    $categories[] = [
+        "id" => (int)$row["id"],
+        "categoryName" => $row["categoryName"]
+    ];
+}
+
+echo json_encode([
+    "success" => true,
+    "categories" => $categories
+]);
