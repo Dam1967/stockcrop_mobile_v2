@@ -1,19 +1,17 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
-$host = getenv("DB_HOST") ?: '';
-$user = getenv("DB_USER") ?: '';
-$pass = getenv("DB_PASS") ?: '';
-$db   = getenv("DB_NAME") ?: '';
-$port = (int)(getenv("DB_PORT") ?: 3306);
+$host = "crossover.proxy.rlwy.net";
+$port = 23490;
+$dbname = "stockcrop_mobile_v2";
+$username = "root";
+$password = "YOUR_RAILWAY_PASSWORD";
 
-$conn = new mysqli($host, $user, $pass, $db, $port);
+$conn = new mysqli($host, $username, $password, $dbname, $port);
 
 if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+    die("❌ DB Error: " . $conn->connect_error);
 }
 
-$conn->set_charset("utf8mb4");
+$conn->set_charset("utf8");
+
 ?>
